@@ -255,56 +255,49 @@ void TicTacToe::CalculateIfWon()
 		}
 	}
 
-	if (!openCellsRemain)
+	// Check Diagonal
+	if (m_BoardCells[0][0]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][2]->GetCellState() && m_BoardCells[2][2]->GetCellState() != CellState::Enum::Blank)
 	{
-		m_IsDraw = true;
-		m_WinnerSelected = false;
+		m_WinnerSelected = true;
+	}
+	// Check Reverse Diagonal
+	else if (m_BoardCells[0][2]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][0]->GetCellState() && m_BoardCells[2][0]->GetCellState() != CellState::Enum::Blank)
+	{
+		m_WinnerSelected = true;
 	}
 	else
 	{
-		m_IsDraw = false;
-
-		// Check Diagonal
-		if (m_BoardCells[0][0]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][2]->GetCellState() && m_BoardCells[2][2]->GetCellState() != CellState::Enum::Blank)
+		// Check for any Horizontal Wins per Row
+		// Each row consists of [m_GameBoard_Cols] columns
+		for (int i = 0; i < m_GameBoard_Cols; i++)
 		{
-			m_WinnerSelected = true;
-		}
-		// Check Reverse Diagonal
-		else if (m_BoardCells[0][2]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][0]->GetCellState() && m_BoardCells[2][0]->GetCellState() != CellState::Enum::Blank)
-		{
-			m_WinnerSelected = true;
-		}
-		else
-		{
-			// Check for any Horizontal Wins per Row
-			// Each row consists of [m_GameBoard_Cols] columns
-			for (int i = 0; i < m_GameBoard_Cols; i++)
+			if (m_BoardCells[i][0]->GetCellState() != CellState::Enum::Blank)
 			{
-				if (m_BoardCells[i][0]->GetCellState() != CellState::Enum::Blank)
+				if (m_BoardCells[i][0]->GetCellState() == m_BoardCells[i][1]->GetCellState() && m_BoardCells[i][1]->GetCellState() == m_BoardCells[i][2]->GetCellState())
 				{
-					if (m_BoardCells[i][0]->GetCellState() == m_BoardCells[i][1]->GetCellState() && m_BoardCells[i][1]->GetCellState() == m_BoardCells[i][2]->GetCellState())
-					{
-						m_WinnerSelected = true;
-						return;
-					}
+					m_WinnerSelected = true;
+					return;
 				}
 			}
+		}
 
-			// Check for any Vertical Wins per Column
-			// Each column consists of [m_GameBoard_Rows] rows
-			for (int i = 0; i < m_GameBoard_Rows; i++)
+		// Check for any Vertical Wins per Column
+		// Each column consists of [m_GameBoard_Rows] rows
+		for (int i = 0; i < m_GameBoard_Rows; i++)
+		{
+			if (m_BoardCells[0][i]->GetCellState() != CellState::Enum::Blank)
 			{
-				if (m_BoardCells[0][i]->GetCellState() != CellState::Enum::Blank)
+				if (m_BoardCells[0][i]->GetCellState() == m_BoardCells[1][i]->GetCellState() && m_BoardCells[1][i]->GetCellState() == m_BoardCells[2][i]->GetCellState())
 				{
-					if (m_BoardCells[0][i]->GetCellState() == m_BoardCells[1][i]->GetCellState() && m_BoardCells[1][i]->GetCellState() == m_BoardCells[2][i]->GetCellState())
-					{
-						m_WinnerSelected = true;
-						return;
-					}
+					m_WinnerSelected = true;
+					return;
 				}
 			}
 		}
 	}
+
+	// Made it here without WinnerSelected, so if no cells are open, it must be a draw
+	m_IsDraw = !openCellsRemain;
 }
 
 bool TicTacToe::WinnerSelected() const

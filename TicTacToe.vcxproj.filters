@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Source/Cell.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source/main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source/Player.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source/Point.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source/TicTacToe.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Header/Cell.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Header/CellState.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Header/Player.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Header/Point.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Header/TicTacToe.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Header/olcPixelGameEngine.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header">
+      <UniqueIdentifier>{8ce61744-5668-4d80-980b-86028f8852bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{90ea5943-5b8b-4a60-98cc-ff2d7304b00f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

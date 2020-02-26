@@ -80,22 +80,22 @@ void TicTacToe::GenerateCells()
 
 	Point position = offset;
 
-	for (int i = 1; i <= m_GameBoard_Cols; i++)
+	for (int i = 1; i <= m_GameBoard_Rows; i++)
 	{
 		std::vector<Cell*> cells;
 
-		for (int j = 1; j <= m_GameBoard_Rows; j++)
+		for (int j = 1; j <= m_GameBoard_Cols; j++)
 		{
 			cells.push_back(new Cell(position, cellSize));
 
-			position.Move(cellSize.Get_X(), 0);
+			position.Move(0, cellSize.Get_Y());
 
 		}
 
 		m_BoardCells.push_back(cells);
 
 		position = offset;
-		position.Move(0, cellSize.Get_Y() * i);
+		position.Move(cellSize.Get_X() * i, 0);
 	}
 }
 
@@ -259,17 +259,19 @@ void TicTacToe::CalculateIfWon()
 	if (m_BoardCells[0][0]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][2]->GetCellState() && m_BoardCells[2][2]->GetCellState() != CellState::Enum::Blank)
 	{
 		m_WinnerSelected = true;
+		return;
 	}
 	// Check Reverse Diagonal
 	else if (m_BoardCells[0][2]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][0]->GetCellState() && m_BoardCells[2][0]->GetCellState() != CellState::Enum::Blank)
 	{
 		m_WinnerSelected = true;
+		return;
 	}
 	else
 	{
 		// Check for any Horizontal Wins per Row
 		// Each row consists of [m_GameBoard_Cols] columns
-		for (int i = 0; i < m_GameBoard_Cols; i++)
+		for (int i = 0; i < m_GameBoard_Rows; i++)
 		{
 			if (m_BoardCells[i][0]->GetCellState() != CellState::Enum::Blank)
 			{
@@ -283,7 +285,7 @@ void TicTacToe::CalculateIfWon()
 
 		// Check for any Vertical Wins per Column
 		// Each column consists of [m_GameBoard_Rows] rows
-		for (int i = 0; i < m_GameBoard_Rows; i++)
+		for (int i = 0; i < m_GameBoard_Cols; i++)
 		{
 			if (m_BoardCells[0][i]->GetCellState() != CellState::Enum::Blank)
 			{

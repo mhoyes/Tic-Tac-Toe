@@ -129,6 +129,9 @@ void TicTacToe::DrawGameBoard()
 					DrawO(topLeft, cellSize);
 				}
 			}
+
+			topLeft = nullptr;
+			cellSize = nullptr;
 		}
 	}
 }
@@ -170,6 +173,8 @@ void TicTacToe::DrawGameInfo()
 		WinnerSelected() ? pos.Move(-20, 0) : pos.Move(80, 0);
 
 		DrawString(pos.Get_X(), pos.Get_Y() + 30, "Press [Enter] key or Click Mouse to play again!", WHITE, 1);
+
+		DrawWinningLine();
 	}
 	else
 	{
@@ -191,6 +196,41 @@ void TicTacToe::DrawGameInfo()
 
 }
 
+void TicTacToe::DrawWinningLine()
+{
+	if (m_WinningLine == WinningLine::None)
+		return;
+	
+	const Point* startPos = m_WinningCells[0]->GetPos();
+	const Point* startCellSize = m_WinningCells[0]->GetCellSize();
+	const Point* endPos = m_WinningCells[1]->GetPos();
+	const Point* endCellSize = m_WinningCells[1]->GetCellSize();
+
+	int xPadding = 30, yPadding = 30;
+	
+	if (m_WinningLine == WinningLine::Diagonal)
+	{
+		DrawLine(startPos->Get_X() + xPadding, startPos->Get_Y() + yPadding, endPos->Get_X() + endCellSize->Get_X() - xPadding, endPos->Get_Y() + endCellSize->Get_Y() - yPadding, WHITE);
+	}
+	else if (m_WinningLine == WinningLine::Diagonal_Reversed)
+	{
+		DrawLine(startPos->Get_X() + xPadding, startPos->Get_Y() + startCellSize->Get_Y()- yPadding, endPos->Get_X() + endCellSize->Get_X() - xPadding, endPos->Get_Y() + yPadding, WHITE);
+	}
+	else if (m_WinningLine == WinningLine::Horizontal)
+	{
+		DrawLine(startPos->Get_X() + xPadding, startPos->Get_Y() + startCellSize->Get_Y() / 2, endPos->Get_X() + endCellSize->Get_X() - xPadding, endPos->Get_Y() + endCellSize->Get_Y()/2, WHITE);
+	}
+	else if (m_WinningLine == WinningLine::Vertical)
+	{
+		DrawLine(startPos->Get_X() + startCellSize->Get_X() / 2, startPos->Get_Y() + yPadding, endPos->Get_X() + endCellSize->Get_X() / 2, endPos->Get_Y() + endCellSize->Get_Y() - yPadding, WHITE);
+	}
+
+	startPos = nullptr;
+	startCellSize = nullptr;
+	endPos = nullptr;
+	endCellSize = nullptr;
+}
+
 void TicTacToe::InitializeBoardState()
 {
 	m_CurrentPlayerIndex = rand() % 2;
@@ -206,6 +246,9 @@ void TicTacToe::InitializeBoardState()
 			m_BoardCells[i][j]->Reset();
 		}
 	}
+
+	m_WinningLine = WinningLine::None;
+	m_WinningCells.clear();
 }
 
 void TicTacToe::OnCellClickedEvent()
@@ -259,32 +302,25 @@ void TicTacToe::CalculateIfWon()
 	if (m_BoardCells[0][0]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][2]->GetCellState() && m_BoardCells[2][2]->GetCellState() != CellState::Enum::Blank)
 	{
 		m_WinnerSelected = true;
+		m_WinningCells.push_back(m_BoardCells[0][0]);
+		m_WinningCells.push_back(m_BoardCells[2][2]);
+		m_WinningLine = WinningLine::Diagonal;
 		return;
 	}
 	// Check Reverse Diagonal
 	else if (m_BoardCells[0][2]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][0]->GetCellState() && m_BoardCells[2][0]->GetCellState() != CellState::Enum::Blank)
 	{
 		m_WinnerSelected = true;
+		m_WinningCells.push_back(m_BoardCells[0][2]);
+		m_WinningCells.push_back(m_BoardCells[2][0]);
+		m_WinningLine = WinningLine::Diagonal_Reversed;
 		return;
 	}
 	else
 	{
 		// Check for any Horizontal Wins per Row
 		// Each row consists of [m_GameBoard_Cols] columns
-		for (int i = 0; i < m_GameBoard_Rows; i++)
-		{
-			if (m_BoardCells[i][0]->GetCellState() != CellState::Enum::Blank)
-			{
-				if (m_BoardCells[i][0]->GetCellState() == m_BoardCells[i][1]->GetCellState() && m_BoardCells[i][1]->GetCellState() == m_BoardCells[i][2]->GetCellState())
-				{
-					m_WinnerSelected = true;
-					return;
-				}
-			}
-		}
 
-		// Check for any Vertical Wins per Column
-		// Each column consists of [m_GameBoard_Rows] rows
 		for (int i = 0; i < m_GameBoard_Cols; i++)
 		{
 			if (m_BoardCells[0][i]->GetCellState() != CellState::Enum::Blank)
@@ -292,6 +328,26 @@ void TicTacToe::CalculateIfWon()
 				if (m_BoardCells[0][i]->GetCellState() == m_BoardCells[1][i]->GetCellState() && m_BoardCells[1][i]->GetCellState() == m_BoardCells[2][i]->GetCellState())
 				{
 					m_WinnerSelected = true;
+					m_WinningCells.push_back(m_BoardCells[0][i]);
+					m_WinningCells.push_back(m_BoardCells[2][i]);
+					m_WinningLine = WinningLine::Horizontal;
+					return;
+				}
+			}
+		}
+
+		// Check for any Vertical Wins per Column
+		// Each column consists of [m_GameBoard_Rows] rows
+		for (int i = 0; i < m_GameBoard_Rows; i++)
+		{
+			if (m_BoardCells[i][0]->GetCellState() != CellState::Enum::Blank)
+			{
+				if (m_BoardCells[i][0]->GetCellState() == m_BoardCells[i][1]->GetCellState() && m_BoardCells[i][1]->GetCellState() == m_BoardCells[i][2]->GetCellState())
+				{
+					m_WinnerSelected = true;
+					m_WinningCells.push_back(m_BoardCells[i][0]);
+					m_WinningCells.push_back(m_BoardCells[i][2]);
+					m_WinningLine = WinningLine::Vertical;
 					return;
 				}
 			}

@@ -2,6 +2,7 @@
 #include "olcPixelGameEngine.h"
 #include "Player.h"
 #include "Cell.h"
+#include "WinningLine.h"
 #include <vector>
 
 using namespace olc;
@@ -24,6 +25,7 @@ private:
 	void DrawX(const Point* topLeft, const Point* cellSize);
 	void DrawO(const Point* topLeft, const Point* cellSize);
 	void DrawGameInfo();
+	void DrawWinningLine();
 
 	void InitializeBoardState();
 	void OnCellClickedEvent();
@@ -38,6 +40,7 @@ private:
 	std::vector<Player*> m_Players;
 
 	std::vector<std::vector<Cell*>> m_BoardCells;
+	std::vector<Cell*> m_WinningCells;
 
 	const int m_GameBoard_Rows;
 	const int m_GameBoard_Cols;
@@ -48,4 +51,6 @@ private:
 
 	bool m_WinnerSelected;
 	bool m_IsDraw;
+
+	WinningLine m_WinningLine;
 };

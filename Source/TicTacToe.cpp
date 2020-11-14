@@ -5,17 +5,25 @@
 #include "TicTacToe.h"
 #include "Point.h"
 
-TicTacToe::TicTacToe() : m_TotalGamesPlayed(0), m_NumOfPlayers(2), m_GameBoard_Rows(3), m_GameBoard_Cols(3)
+TicTacToe::TicTacToe(int numOfPlayers, bool aiEnabled)
+	: m_TotalGamesPlayed(0)
+	, m_AIPlayerActive(aiEnabled)
+	, m_AIsTurn(false)
+	, m_AITurnsElapsedTime(0.0f)
+	, m_AITurnsSimulatedTurnTime(0.0f)
+	, m_NumOfPlayers(numOfPlayers)
+	, m_GameBoard_Rows(3)
+	, m_GameBoard_Cols(3)
 {
 	sAppName = "Tic-Tac-Toe";
 }
 
 bool TicTacToe::OnUserCreate()
 {
+	srand(time(NULL));
+
 	GenerateCells();
 	GeneratePlayers();
-
-	srand(time(NULL));
 
 	InitializeBoardState();
 
@@ -37,9 +45,40 @@ bool TicTacToe::OnUserUpdate(float fElapsedTime)
 			InitializeBoardState();
 		}
 	}
-	else if(GetMouse(0).bPressed)
+	// AIPlayer is active and current index isn't Player 1.
+	// Must be AIs turn
+	else if (m_AIPlayerActive && m_CurrentPlayerIndex != 0)
 	{
-		OnCellClickedEvent();
+		// Track the elapsed time the AI has had it's turn
+		m_AITurnsElapsedTime += fElapsedTime;
+
+		// Turn Time hasn't been calculated. Let's calculate it.
+		if (m_AITurnsSimulatedTurnTime == 0.0f)
+		{
+			float min = 0.5f;
+			float max = 2.5f;
+
+			// Get a random time between min and max
+			m_AITurnsSimulatedTurnTime = (rand() / static_cast<float>(RAND_MAX * max - 1) + min);
+		}
+
+		// Simulate thinking by waiting until the specified time has elapsed before making a move.
+		if (m_AITurnsElapsedTime >= m_AITurnsSimulatedTurnTime)
+		{
+			OnAIsTurn();
+		}
+		else
+		{
+			m_AIsTurn = true;
+		}
+	}
+	// Must be a players turn
+	else
+	{
+		if (GetMouse(0).bPressed)
+		{
+			OnCurrentPlayersTurn();
+		}
 	}
 
 	return true;
@@ -101,8 +140,17 @@ void TicTacToe::GenerateCells()
 
 void TicTacToe::GeneratePlayers()
 {
-	m_Players.push_back(new Player(CellState::Enum::X));
-	m_Players.push_back(new Player(CellState::Enum::O));
+	int num = rand() % 2;
+
+	CellState::Enum player1CellState = (CellState::Enum)num;
+
+	m_Players.push_back(new Player(player1CellState));
+
+	int otherPlayerVal = (num == 0) ? num+1 : num-1;
+	
+	CellState::Enum otherPlayerCellState = (CellState::Enum)otherPlayerVal;
+
+	m_Players.push_back(new Player(otherPlayerCellState));
 }
 
 void TicTacToe::DrawGameBoard()
@@ -162,7 +210,14 @@ void TicTacToe::DrawGameInfo()
 
 	if (WinnerSelected() || IsDraw())
 	{
-		std::string str = WinnerSelected() ? "Winner is " + currentPlayer + "!"
+		std::string player = "Player";
+
+		if (m_CurrentPlayerIndex == 1 && m_AIPlayerActive)
+		{
+			player = "AI";
+		}
+
+		std::string str = WinnerSelected() ? "Winner is " + player + " (" + currentPlayer + ")!"
 										   : "Game Over! It's a Draw!";
 
 		// Move the position away from the middle of the screen to try and center it
@@ -178,7 +233,9 @@ void TicTacToe::DrawGameInfo()
 	}
 	else
 	{
-		std::string str = "Current Player: " + currentPlayer;
+		std::string aiStr = "AIs Turn: ";
+		std::string playerStr = "Players Turn: ";
+		std::string str = (m_AIsTurn ? aiStr : playerStr) + currentPlayer;
 
 		pos.Move(-(int)(str.length() * 12), 0);
 		DrawString(pos.Get_X(), pos.Get_Y(), str, WHITE, 3);
@@ -191,7 +248,15 @@ void TicTacToe::DrawGameInfo()
 	for (int i = 0; i < m_Players.size(); i++)
 	{
 		playerScore_XPos += (oneQuarterScreenWidth + 30);
-		DrawString(playerScore_XPos, ScreenHeight() - 10, "Player " + CellState::ToString(m_Players[i]->GetPlayerPiece()) + " Wins: " + std::to_string(m_Players[i]->GetWinCount()), WHITE);
+		std::string player = "Player";
+
+		if (i == 1 && m_AIPlayerActive)
+		{
+			player = "AI";
+		}
+
+		std::string score = player + " (" + CellState::ToString(m_Players[i]->GetPlayerPiece()) + ") Wins: " + std::to_string(m_Players[i]->GetWinCount());
+		DrawString(playerScore_XPos, ScreenHeight() - 10, score, WHITE);
 	}
 
 }
@@ -251,13 +316,13 @@ void TicTacToe::InitializeBoardState()
 	m_WinningCells.clear();
 }
 
-void TicTacToe::OnCellClickedEvent()
+void TicTacToe::OnCurrentPlayersTurn()
 {
 	// Get mouse location this frame and return the clicked cell
 	Cell* clickedCell = GetClickedCell(new Point(GetMouseX(), GetMouseY()));
 	if (clickedCell != nullptr && clickedCell->IsCellOpen())
 	{
-		clickedCell->SelectCell(m_CurrentPlayerIndex);
+		clickedCell->SelectCell(m_Players[m_CurrentPlayerIndex]->GetPlayerPiece());
 
 		CalculateIfWon();
 
@@ -272,6 +337,44 @@ void TicTacToe::OnCellClickedEvent()
 	}
 }
 
+void TicTacToe::OnAIsTurn()
+{
+	m_AITurnsElapsedTime = 0.0f;
+	m_AITurnsSimulatedTurnTime = 0.0f;
+
+	bool foundOpenCell = false;
+	
+	int boardSizeX = m_BoardCells[0].size();
+	int boardSizeY = m_BoardCells[0].size();
+
+	while (!foundOpenCell)
+	{
+		int randRow = rand() % m_GameBoard_Rows;
+		int randCol = rand() % m_GameBoard_Cols;
+
+		// Search for a random open cell
+		Cell* chosenCell = m_BoardCells[randRow][randCol];
+		if (chosenCell != nullptr && chosenCell->IsCellOpen())
+		{
+			foundOpenCell = true;
+			chosenCell->SelectCell(m_Players[m_CurrentPlayerIndex]->GetPlayerPiece());
+
+			CalculateIfWon();
+
+			if (!WinnerSelected())
+			{
+				ChangePlayer();
+			}
+			else
+			{
+				m_Players[m_CurrentPlayerIndex]->WonGame();
+			}
+		}
+	}
+
+	m_AIsTurn = false;
+}
+
 void TicTacToe::ChangePlayer()
 {
 	m_CurrentPlayerIndex++;
@@ -282,9 +385,8 @@ void TicTacToe::ChangePlayer()
 	}
 }
 
-void TicTacToe::CalculateIfWon()
+bool TicTacToe::AnyCellsOpen()
 {
-	// Check for Draw by checking if all cells are closed
 	bool openCellsRemain = false;
 	for (int col = 0; col < m_BoardCells[0].size(); col++)
 	{
@@ -297,6 +399,14 @@ void TicTacToe::CalculateIfWon()
 			}
 		}
 	}
+
+	return openCellsRemain;
+}
+
+void TicTacToe::CalculateIfWon()
+{
+	// Check for Draw by checking if all cells are closed
+	bool openCellsRemain = AnyCellsOpen();
 
 	// Check Diagonal
 	if (m_BoardCells[0][0]->GetCellState() == m_BoardCells[1][1]->GetCellState() && m_BoardCells[1][1]->GetCellState() == m_BoardCells[2][2]->GetCellState() && m_BoardCells[2][2]->GetCellState() != CellState::Enum::Blank)

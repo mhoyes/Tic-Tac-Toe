@@ -44,11 +44,11 @@ CellState::Enum Cell::GetCellState() const
 	return m_CellState;
 }
 
-void Cell::SelectCell(int currentPlayerIndex)
+void Cell::SelectCell(CellState::Enum state)
 {
 	m_IsCellOpen = false;
 
-	m_CellState = (CellState::Enum)currentPlayerIndex;
+	m_CellState = state;
 }
 
 void Cell::Reset()

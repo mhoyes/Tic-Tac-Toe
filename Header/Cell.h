@@ -16,7 +16,7 @@ public:
 
 	CellState::Enum GetCellState() const;
 
-	void SelectCell(int currentPlayerIndex);
+	void SelectCell(CellState::Enum state);
 
 	void Reset();
 

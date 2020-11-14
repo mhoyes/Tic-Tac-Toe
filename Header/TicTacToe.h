@@ -10,7 +10,7 @@ using namespace olc;
 class TicTacToe: public PixelGameEngine
 {
 public:
-	TicTacToe();
+	TicTacToe(int numOfPlayers, bool aiEnabled);
 
 	bool OnUserCreate() override;
 	bool OnUserUpdate(float fElapsedTime) override;
@@ -28,8 +28,10 @@ private:
 	void DrawWinningLine();
 
 	void InitializeBoardState();
-	void OnCellClickedEvent();
+	void OnCurrentPlayersTurn();
+	void OnAIsTurn();
 	void ChangePlayer();
+	bool AnyCellsOpen();
 	void CalculateIfWon();
 	bool WinnerSelected() const;
 	bool IsDraw() const;
@@ -49,8 +51,13 @@ private:
 	int m_CurrentPlayerIndex;
 	int m_TotalGamesPlayed;
 
+	bool m_AIPlayerActive;
+	bool m_AIsTurn;
 	bool m_WinnerSelected;
 	bool m_IsDraw;
+
+	float m_AITurnsElapsedTime;
+	float m_AITurnsSimulatedTurnTime;
 
 	WinningLine m_WinningLine;
 };
